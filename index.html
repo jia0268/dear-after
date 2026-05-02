@@ -1,414 +1,433 @@
-import React, { useState } from 'react';
-import { 
-  Home,
-  MessageCircleHeart, 
-  ListTodo, 
-  MailPlus, 
-  Users, 
-  Mic, 
-  Send, 
-  Heart,
-  ChevronRight,
-  ShieldCheck,
-  FileText,
-  Clock,
-  Lock,
-  Gift,
-  Crown,
-  Sparkles
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>好好說再見 - 告別規劃平台</title>
+  
+  <!-- 載入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 載入 React 與 ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- 載入 Babel (用來在瀏覽器即時編譯 JSX) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <!-- 應用程式掛載點 -->
+  <div id="root"></div>
 
-const App = () => {
-  // 將預設頁面改為 'home' (首頁總覽)
-  const [activeTab, setActiveTab] = useState('home');
+  <!-- 撰寫 React 邏輯 -->
+  <script type="text/babel">
+    const { useState } = React;
 
-  // --- 介面配色定義 (溫暖、安定) ---
-  const colors = {
-    bg: 'bg-stone-50',
-    sidebar: 'bg-[#EAE4D9]',
-    primary: 'bg-[#738276]', // 鼠尾草綠
-    primaryHover: 'hover:bg-[#5a665c]',
-    text: 'text-stone-800',
-    textLight: 'text-stone-500',
-    card: 'bg-white',
-  };
+    // --- 圖示庫 (取代 lucide-react，確保無外部套件依賴) ---
+    const IconWrapper = ({ size = 24, className = "", fill = "none", children }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        {children}
+      </svg>
+    );
 
-  // --- 假資料 ---
-  const [chatMessages, setChatMessages] = useState([
-    { role: 'ai', text: '您好，我是您的專屬陪伴員。今天辛苦了，有什麼想跟我說的嗎？還是我們一起來整理一下目前的進度呢？' }
-  ]);
-  const [inputText, setInputText] = useState('');
+    const Icons = {
+      Home: (props) => <IconWrapper {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconWrapper>,
+      MessageCircleHeart: (props) => <IconWrapper {...props}><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M15.8 9.2a2.5 2.5 0 0 0-3.5 0l-.3.4-.3-.4a2.5 2.5 0 1 0-3.6 3.5l3.9 3.9 3.9-3.9a2.5 2.5 0 0 0 0-3.5Z"/></IconWrapper>,
+      ListTodo: (props) => <IconWrapper {...props}><rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></IconWrapper>,
+      MailPlus: (props) => <IconWrapper {...props}><path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><path d="M19 16v6"/><path d="M16 19h6"/></IconWrapper>,
+      Users: (props) => <IconWrapper {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconWrapper>,
+      Mic: (props) => <IconWrapper {...props}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></IconWrapper>,
+      Send: (props) => <IconWrapper {...props}><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></IconWrapper>,
+      Heart: (props) => <IconWrapper {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></IconWrapper>,
+      ChevronRight: (props) => <IconWrapper {...props}><path d="m9 18 6-6-6-6"/></IconWrapper>,
+      ShieldCheck: (props) => <IconWrapper {...props}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.5 0 4.5 1 6.5 2a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></IconWrapper>,
+      FileText: (props) => <IconWrapper {...props}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></IconWrapper>,
+      Clock: (props) => <IconWrapper {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconWrapper>,
+      Lock: (props) => <IconWrapper {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></IconWrapper>,
+      Gift: (props) => <IconWrapper {...props}><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></IconWrapper>,
+      Crown: (props) => <IconWrapper {...props}><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.518l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></IconWrapper>,
+      Sparkles: (props) => <IconWrapper {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 3v4"/><path d="M17 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/></IconWrapper>,
+    };
 
-  const handleSendMessage = (textOverride = null) => {
-    const textToSend = textOverride || inputText;
-    if (!textToSend.trim()) return;
-    
-    setChatMessages([...chatMessages, { role: 'user', text: textToSend }]);
-    if (!textOverride) setInputText('');
-    
-    // 模擬 AI 回覆
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { 
-        role: 'ai', 
-        text: '我明白您的感受，這段時間您真的承擔了很多。如果您覺得跟親友開口有困難，我可以幫您擬一份溫和的訊息，讓他們了解您目前的處境與需要的協助，好嗎？' 
-      }]);
-    }, 1000);
-  };
+    // --- 主要 App 組件 ---
+    const App = () => {
+      const [activeTab, setActiveTab] = useState('home');
 
-  const startChatWithEmotion = (emotion) => {
-    setActiveTab('chat');
-    handleSendMessage(`我現在覺得${emotion}，需要聊聊...`);
-  };
+      const colors = {
+        bg: 'bg-stone-50',
+        sidebar: 'bg-[#EAE4D9]',
+        primary: 'bg-[#738276]', 
+        primaryHover: 'hover:bg-[#5a665c]',
+        text: 'text-stone-800',
+        textLight: 'text-stone-500',
+        card: 'bg-white',
+      };
 
-  const menuItems = [
-    { id: 'home', label: '首頁總覽', icon: <Home size={20} /> },
-    { id: 'chat', label: '溫柔陪伴', icon: <MessageCircleHeart size={20} /> },
-    { id: 'tasks', label: '領航指南', icon: <ListTodo size={20} /> },
-    { id: 'capsule', label: '時光膠囊', icon: <MailPlus size={20} /> },
-    { id: 'family', label: '家庭共識', icon: <Users size={20} />, isPremium: true },
-  ];
+      const [chatMessages, setChatMessages] = useState([
+        { role: 'ai', text: '您好，我是您的專屬陪伴員。今天辛苦了，有什麼想跟我說的嗎？還是我們一起來整理一下目前的進度呢？' }
+      ]);
+      const [inputText, setInputText] = useState('');
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'home':
-        return (
-          <div className="flex flex-col h-full space-y-6 overflow-y-auto pr-2 pb-8">
-            {/* 溫暖問候 */}
-            <div className="mt-4">
-              <h2 className="text-3xl font-serif font-bold text-stone-800">早安，林太太</h2>
-              <p className="text-stone-500 mt-2 text-lg">無論今天多麼疲憊，我們都在這裡陪您一步步走。</p>
-            </div>
+      const handleSendMessage = (textOverride = null) => {
+        const textToSend = textOverride || inputText;
+        if (!textToSend.trim()) return;
+        
+        setChatMessages([...chatMessages, { role: 'user', text: textToSend }]);
+        if (!textOverride) setInputText('');
+        
+        setTimeout(() => {
+          setChatMessages(prev => [...prev, { 
+            role: 'ai', 
+            text: '我明白您的感受，這段時間您真的承擔了很多。如果您覺得跟親友開口有困難，我可以幫您擬一份溫和的訊息，讓他們了解您目前的處境與需要的協助，好嗎？' 
+          }]);
+        }, 1000);
+      };
 
-            {/* 情緒打卡區 (取代直接丟一個聊天框給使用者) */}
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-stone-800 mb-1 flex items-center gap-2">
-                  <Heart className="text-rose-400" size={20} fill="currentColor" /> 現在感覺如何？
-                </h3>
-                <p className="text-stone-500 text-sm mb-4">點擊下方標籤，AI 陪伴員隨時傾聽，幫您梳理思緒。</p>
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={() => startChatWithEmotion('喘不過氣')} className="px-5 py-2.5 bg-rose-50 text-rose-700 rounded-full text-sm font-medium hover:bg-rose-100 transition shadow-sm">
-                    有點喘不過氣
-                  </button>
-                  <button onClick={() => startChatWithEmotion('不知該怎麼辦')} className="px-5 py-2.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-100 transition shadow-sm">
-                    不知該怎麼辦
-                  </button>
-                  <button onClick={() => startChatWithEmotion('還算平靜')} className="px-5 py-2.5 bg-stone-100 text-stone-700 rounded-full text-sm font-medium hover:bg-stone-200 transition shadow-sm">
-                    目前還算平靜
-                  </button>
+      const startChatWithEmotion = (emotion) => {
+        setActiveTab('chat');
+        handleSendMessage(`我現在覺得${emotion}，需要聊聊...`);
+      };
+
+      const menuItems = [
+        { id: 'home', label: '首頁總覽', icon: <Icons.Home size={20} /> },
+        { id: 'chat', label: '溫柔陪伴', icon: <Icons.MessageCircleHeart size={20} /> },
+        { id: 'tasks', label: '領航指南', icon: <Icons.ListTodo size={20} /> },
+        { id: 'capsule', label: '時光膠囊', icon: <Icons.MailPlus size={20} /> },
+        { id: 'family', label: '家庭共識', icon: <Icons.Users size={20} />, isPremium: true },
+      ];
+
+      const renderContent = () => {
+        switch (activeTab) {
+          case 'home':
+            return (
+              <div className="flex flex-col h-full space-y-6 overflow-y-auto pr-2 pb-8">
+                <div className="mt-4">
+                  <h2 className="text-3xl font-serif font-bold text-stone-800">早安，林太太</h2>
+                  <p className="text-stone-500 mt-2 text-lg">無論今天多麼疲憊，我們都在這裡陪您一步步走。</p>
                 </div>
-              </div>
-              <div className="hidden md:flex w-24 h-24 bg-[#F2EFE9] rounded-full items-center justify-center">
-                <Sparkles size={40} className="text-[#D4C8B8]" />
-              </div>
-            </div>
 
-            {/* 當務之急 (聚焦下一步，降低資訊焦慮) */}
-            <div>
-              <div className="flex justify-between items-end mb-3">
-                <h3 className="text-lg font-bold text-stone-800">目前的當務之急</h3>
-                <button onClick={() => setActiveTab('tasks')} className="text-sm text-stone-500 hover:text-[#738276] flex items-center">
-                  查看完整流程 <ChevronRight size={16} />
-                </button>
-              </div>
-              {/* 核心任務卡片：使用主題色吸引注意力 */}
-              <div 
-                className="bg-[#738276] text-white p-6 rounded-3xl shadow-md cursor-pointer hover:bg-[#5a665c] transition relative overflow-hidden"
-                onClick={() => setActiveTab('tasks')}
-              >
-                <div className="relative z-10 flex justify-between items-center">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 flex items-center justify-between">
                   <div>
-                    <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-3">
-                      第一階段：醫療與意願確認
-                    </span>
-                    <h4 className="text-2xl font-bold mb-1">與主治醫師確認目前病程階段</h4>
-                    <p className="text-white/80 text-sm">不知道怎麼開口？讓 AI 幫您擬定溝通草稿</p>
-                  </div>
-                  <div className="bg-white/10 p-3 rounded-full">
-                    <ChevronRight size={28} className="text-white" />
-                  </div>
-                </div>
-                {/* 裝飾性背景圖形 */}
-                <ShieldCheck size={120} className="absolute -right-6 -bottom-6 text-white opacity-5" />
-              </div>
-            </div>
-
-            {/* 快速捷徑與資源 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div onClick={() => setActiveTab('capsule')} className="bg-white p-5 rounded-3xl border border-stone-200 cursor-pointer hover:shadow-md hover:border-[#738276]/30 transition group flex items-start gap-4">
-                <div className="p-3 bg-amber-50 rounded-2xl group-hover:bg-amber-100 transition">
-                  <Gift className="text-amber-600" size={24} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-stone-800 mb-1">時光膠囊</h4>
-                  <p className="text-xs text-stone-500">有 1 個膠囊草稿等待您錄製完成，保留最珍貴的話語。</p>
-                </div>
-              </div>
-
-              <div onClick={() => setActiveTab('family')} className="bg-white p-5 rounded-3xl border border-stone-200 cursor-pointer hover:shadow-md hover:border-[#738276]/30 transition group flex items-start gap-4">
-                <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition">
-                  <Users className="text-blue-600" size={24} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-stone-800 mb-1">家庭會議 (進階)</h4>
-                  <p className="text-xs text-stone-500">邀請家人加入群組，對齊進度，減少誤解與溝通成本。</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'chat':
-        return (
-          <div className="flex flex-col h-full">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-stone-800">溫柔陪伴</h2>
-                <p className="text-stone-500 mt-1">無論是情緒抒發，還是需要溝通建議，都在這裡說吧。</p>
-              </div>
-              <button onClick={() => setActiveTab('home')} className="text-sm text-stone-400 hover:text-stone-600">返回首頁</button>
-            </div>
-            
-            {/* 聊天區域 */}
-            <div className="flex-1 bg-white rounded-3xl shadow-sm border border-stone-100 p-6 flex flex-col mb-4 overflow-y-auto">
-              {chatMessages.map((msg, idx) => (
-                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-                  {msg.role === 'ai' && (
-                    <div className="w-8 h-8 rounded-full bg-[#EAE4D9] flex items-center justify-center mr-2 flex-shrink-0">
-                      <Sparkles size={16} className="text-[#738276]" />
+                    <h3 className="text-lg font-bold text-stone-800 mb-1 flex items-center gap-2">
+                      <Icons.Heart className="text-rose-400" size={20} fill="currentColor" /> 現在感覺如何？
+                    </h3>
+                    <p className="text-stone-500 text-sm mb-4">點擊下方標籤，AI 陪伴員隨時傾聽，幫您梳理思緒。</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button onClick={() => startChatWithEmotion('喘不過氣')} className="px-5 py-2.5 bg-rose-50 text-rose-700 rounded-full text-sm font-medium hover:bg-rose-100 transition shadow-sm">
+                        有點喘不過氣
+                      </button>
+                      <button onClick={() => startChatWithEmotion('不知該怎麼辦')} className="px-5 py-2.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-100 transition shadow-sm">
+                        不知該怎麼辦
+                      </button>
+                      <button onClick={() => startChatWithEmotion('還算平靜')} className="px-5 py-2.5 bg-stone-100 text-stone-700 rounded-full text-sm font-medium hover:bg-stone-200 transition shadow-sm">
+                        目前還算平靜
+                      </button>
                     </div>
-                  )}
-                  <div className={`max-w-[70%] p-4 rounded-2xl ${
-                    msg.role === 'user' 
-                      ? `${colors.primary} text-white rounded-tr-none shadow-sm` 
-                      : 'bg-stone-50 text-stone-800 rounded-tl-none border border-stone-100'
-                  }`}>
-                    {msg.text}
+                  </div>
+                  <div className="hidden md:flex w-24 h-24 bg-[#F2EFE9] rounded-full items-center justify-center">
+                    <Icons.Sparkles size={40} className="text-[#D4C8B8]" />
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* 建議標籤 */}
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
-              <button className="whitespace-nowrap px-4 py-2 bg-stone-200/60 text-stone-700 rounded-full text-sm hover:bg-stone-200 transition">我今天覺得好累...</button>
-              <button className="whitespace-nowrap px-4 py-2 bg-[#e6ece7] text-[#5a665c] rounded-full text-sm transition flex items-center gap-1 font-medium">
-                <Heart size={14} /> 幫我把抱怨轉化為溝通草稿
-              </button>
-            </div>
-
-            {/* 輸入框 */}
-            <div className="flex gap-2 items-center bg-white p-2 rounded-full shadow-sm border border-stone-200">
-              <button className="p-3 text-stone-400 hover:text-stone-600 transition">
-                <Mic size={20} />
-              </button>
-              <input 
-                type="text" 
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="用語音或文字輸入您的想法..." 
-                className="flex-1 bg-transparent outline-none text-stone-700"
-              />
-              <button onClick={() => handleSendMessage()} className={`p-3 ${colors.primary} text-white rounded-full ${colors.primaryHover} transition`}>
-                <Send size={20} />
-              </button>
-            </div>
-          </div>
-        );
-      
-      case 'tasks':
-        return (
-          <div className="h-full overflow-y-auto pr-2 pb-8">
-            <div className="mb-6 flex justify-between items-end">
-              <div>
-                <h2 className="text-2xl font-bold text-stone-800">領航指南</h2>
-                <p className="text-stone-500 mt-1">我們把複雜的流程拆解成一小步，慢慢來就好。</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-stone-500">目前階段進度</p>
-                <p className="text-xl font-bold text-[#738276]">30%</p>
-              </div>
-            </div>
-
-            {/* 進度條 */}
-            <div className="w-full bg-stone-200 rounded-full h-2 mb-8">
-              <div className="bg-[#738276] h-2 rounded-full" style={{ width: '30%' }}></div>
-            </div>
-
-            {/* 任務分類卡片 */}
-            <div className="space-y-6">
-              <TaskCategory 
-                title="第一步：醫療與意願確認" 
-                icon={<ShieldCheck size={24} className="text-rose-700" />}
-                bgColor="bg-rose-50"
-                tasks={[
-                  { label: '了解安寧緩和醫療意願書 (AD)', done: true },
-                  { label: '與主治醫師確認目前病程階段', done: false, active: true },
-                  { label: '確認病患本人對急救的意願', done: false }
-                ]}
-              />
-              <TaskCategory 
-                title="第二步：文件與行政準備" 
-                icon={<FileText size={24} className="text-blue-700" />}
-                bgColor="bg-blue-50"
-                tasks={[
-                  { label: '準備身分證與戶口名簿影本', done: false, alert: '系統提醒：您尚缺戶口名簿' },
-                  { label: '盤點現有保險單', done: false }
-                ]}
-              />
-            </div>
-          </div>
-        );
-
-      case 'capsule':
-        return (
-          <div className="h-full overflow-y-auto pr-2">
-            <div className="mb-6 flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold text-stone-800">時光膠囊</h2>
-                <p className="text-stone-500 mt-1">把愛與回憶，預約在未來的某個時刻送達。</p>
-              </div>
-              <button className={`${colors.primary} text-white px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 flex items-center gap-2`}>
-                <Gift size={16} /> 製作新膠囊
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white p-5 rounded-3xl shadow-sm border border-stone-200 flex flex-col justify-between h-48">
                 <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg text-stone-800">給小寶的結婚祝福</h3>
-                    <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                      <Lock size={12}/> 未解鎖
-                    </span>
+                  <div className="flex justify-between items-end mb-3">
+                    <h3 className="text-lg font-bold text-stone-800">目前的當務之急</h3>
+                    <button onClick={() => setActiveTab('tasks')} className="text-sm text-stone-500 hover:text-[#738276] flex items-center">
+                      查看完整流程 <Icons.ChevronRight size={16} />
+                    </button>
                   </div>
-                  <p className="text-sm text-stone-500 line-clamp-2">「如果你看到這支影片，代表你已經找到那個能牽手一輩子的人了...」</p>
+                  <div 
+                    className="bg-[#738276] text-white p-6 rounded-3xl shadow-md cursor-pointer hover:bg-[#5a665c] transition relative overflow-hidden"
+                    onClick={() => setActiveTab('tasks')}
+                  >
+                    <div className="relative z-10 flex justify-between items-center">
+                      <div>
+                        <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-3">
+                          第一階段：醫療與意願確認
+                        </span>
+                        <h4 className="text-2xl font-bold mb-1">與主治醫師確認目前病程階段</h4>
+                        <p className="text-white/80 text-sm">不知道怎麼開口？讓 AI 幫您擬定溝通草稿</p>
+                      </div>
+                      <div className="bg-white/10 p-3 rounded-full">
+                        <Icons.ChevronRight size={28} className="text-white" />
+                      </div>
+                    </div>
+                    <Icons.ShieldCheck size={120} className="absolute -right-6 -bottom-6 text-white opacity-5" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-stone-400">
-                  <Clock size={16} /> 設定解鎖時間：2030年5月20日
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div onClick={() => setActiveTab('capsule')} className="bg-white p-5 rounded-3xl border border-stone-200 cursor-pointer hover:shadow-md hover:border-[#738276]/30 transition group flex items-start gap-4">
+                    <div className="p-3 bg-amber-50 rounded-2xl group-hover:bg-amber-100 transition">
+                      <Icons.Gift className="text-amber-600" size={24} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-stone-800 mb-1">時光膠囊</h4>
+                      <p className="text-xs text-stone-500">有 1 個膠囊草稿等待您錄製完成，保留最珍貴的話語。</p>
+                    </div>
+                  </div>
+
+                  <div onClick={() => setActiveTab('family')} className="bg-white p-5 rounded-3xl border border-stone-200 cursor-pointer hover:shadow-md hover:border-[#738276]/30 transition group flex items-start gap-4">
+                    <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition">
+                      <Icons.Users className="text-blue-600" size={24} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-stone-800 mb-1">家庭會議 (進階)</h4>
+                      <p className="text-xs text-stone-500">邀請家人加入群組，對齊進度，減少誤解與溝通成本。</p>
+                    </div>
+                  </div>
                 </div>
               </div>
+            );
 
-              <div className="bg-stone-100 p-5 rounded-3xl border border-dashed border-stone-300 flex flex-col justify-center items-center h-48 text-stone-400 cursor-pointer hover:bg-stone-200 transition">
-                <Heart size={32} className="mb-2" />
-                <p>錄製一段語音給配偶</p>
+          case 'chat':
+            return (
+              <div className="flex flex-col h-full">
+                <div className="mb-6 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-stone-800">溫柔陪伴</h2>
+                    <p className="text-stone-500 mt-1">無論是情緒抒發，還是需要溝通建議，都在這裡說吧。</p>
+                  </div>
+                  <button onClick={() => setActiveTab('home')} className="text-sm text-stone-400 hover:text-stone-600">返回首頁</button>
+                </div>
+                
+                <div className="flex-1 bg-white rounded-3xl shadow-sm border border-stone-100 p-6 flex flex-col mb-4 overflow-y-auto">
+                  {chatMessages.map((msg, idx) => (
+                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+                      {msg.role === 'ai' && (
+                        <div className="w-8 h-8 rounded-full bg-[#EAE4D9] flex items-center justify-center mr-2 flex-shrink-0">
+                          <Icons.Sparkles size={16} className="text-[#738276]" />
+                        </div>
+                      )}
+                      <div className={`max-w-[70%] p-4 rounded-2xl ${
+                        msg.role === 'user' 
+                          ? `${colors.primary} text-white rounded-tr-none shadow-sm` 
+                          : 'bg-stone-50 text-stone-800 rounded-tl-none border border-stone-100'
+                      }`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+                  <button className="whitespace-nowrap px-4 py-2 bg-stone-200/60 text-stone-700 rounded-full text-sm hover:bg-stone-200 transition">我今天覺得好累...</button>
+                  <button className="whitespace-nowrap px-4 py-2 bg-[#e6ece7] text-[#5a665c] rounded-full text-sm transition flex items-center gap-1 font-medium">
+                    <Icons.Heart size={14} /> 幫我把抱怨轉化為溝通草稿
+                  </button>
+                </div>
+
+                <div className="flex gap-2 items-center bg-white p-2 rounded-full shadow-sm border border-stone-200">
+                  <button className="p-3 text-stone-400 hover:text-stone-600 transition">
+                    <Icons.Mic size={20} />
+                  </button>
+                  <input 
+                    type="text" 
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="用語音或文字輸入您的想法..." 
+                    className="flex-1 bg-transparent outline-none text-stone-700"
+                  />
+                  <button onClick={() => handleSendMessage()} className={`p-3 ${colors.primary} text-white rounded-full ${colors.primaryHover} transition`}>
+                    <Icons.Send size={20} />
+                  </button>
+                </div>
               </div>
+            );
+          
+          case 'tasks':
+            return (
+              <div className="h-full overflow-y-auto pr-2 pb-8">
+                <div className="mb-6 flex justify-between items-end">
+                  <div>
+                    <h2 className="text-2xl font-bold text-stone-800">領航指南</h2>
+                    <p className="text-stone-500 mt-1">我們把複雜的流程拆解成一小步，慢慢來就好。</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-stone-500">目前階段進度</p>
+                    <p className="text-xl font-bold text-[#738276]">30%</p>
+                  </div>
+                </div>
+
+                <div className="w-full bg-stone-200 rounded-full h-2 mb-8">
+                  <div className="bg-[#738276] h-2 rounded-full" style={{ width: '30%' }}></div>
+                </div>
+
+                <div className="space-y-6">
+                  <TaskCategory 
+                    title="第一步：醫療與意願確認" 
+                    icon={<Icons.ShieldCheck size={24} className="text-rose-700" />}
+                    bgColor="bg-rose-50"
+                    tasks={[
+                      { label: '了解安寧緩和醫療意願書 (AD)', done: true },
+                      { label: '與主治醫師確認目前病程階段', done: false, active: true },
+                      { label: '確認病患本人對急救的意願', done: false }
+                    ]}
+                  />
+                  <TaskCategory 
+                    title="第二步：文件與行政準備" 
+                    icon={<Icons.FileText size={24} className="text-blue-700" />}
+                    bgColor="bg-blue-50"
+                    tasks={[
+                      { label: '準備身分證與戶口名簿影本', done: false, alert: '系統提醒：您尚缺戶口名簿' },
+                      { label: '盤點現有保險單', done: false }
+                    ]}
+                  />
+                </div>
+              </div>
+            );
+
+          case 'capsule':
+            return (
+              <div className="h-full overflow-y-auto pr-2">
+                <div className="mb-6 flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-stone-800">時光膠囊</h2>
+                    <p className="text-stone-500 mt-1">把愛與回憶，預約在未來的某個時刻送達。</p>
+                  </div>
+                  <button className={`${colors.primary} text-white px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 flex items-center gap-2`}>
+                    <Icons.Gift size={16} /> 製作新膠囊
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white p-5 rounded-3xl shadow-sm border border-stone-200 flex flex-col justify-between h-48">
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-lg text-stone-800">給小寶的結婚祝福</h3>
+                        <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                          <Icons.Lock size={12}/> 未解鎖
+                        </span>
+                      </div>
+                      <p className="text-sm text-stone-500 line-clamp-2">「如果你看到這支影片，代表你已經找到那個能牽手一輩子的人了...」</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-stone-400">
+                      <Icons.Clock size={16} /> 設定解鎖時間：2030年5月20日
+                    </div>
+                  </div>
+
+                  <div className="bg-stone-100 p-5 rounded-3xl border border-dashed border-stone-300 flex flex-col justify-center items-center h-48 text-stone-400 cursor-pointer hover:bg-stone-200 transition">
+                    <Icons.Heart size={32} className="mb-2" />
+                    <p>錄製一段語音給配偶</p>
+                  </div>
+                </div>
+              </div>
+            );
+
+          case 'family':
+            return (
+              <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                  <Icons.Crown size={40} className="text-amber-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-stone-800 mb-2">解鎖「家庭共識」功能</h2>
+                <p className="text-stone-500 max-w-md mb-8">
+                  升級進階方案，邀請多位家屬加入群組。AI 將協助統整家屬意見、對齊後事流程進度，減少溝通誤會與摩擦。
+                </p>
+                <button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
+                  升級進階方案 (NT$499/月)
+                </button>
+                <p className="text-xs text-stone-400 mt-4">包含：多人協作、無限時光膠囊、專屬法律顧問媒合 9 折優惠</p>
+              </div>
+            );
+          
+          default:
+            return null;
+        }
+      };
+
+      return (
+        <div className={`flex h-screen w-full ${colors.bg} font-sans selection:bg-[#738276] selection:text-white`}>
+          <div className={`w-64 ${colors.sidebar} p-6 flex flex-col shadow-sm z-10 relative`}>
+            <div className="mb-10 mt-2">
+              <h1 className="text-2xl font-serif font-bold text-stone-800 tracking-wider">好好說再見</h1>
+              <p className="text-xs text-stone-500 mt-1 font-medium">陪伴您整理人生的待辦事項</p>
+            </div>
+
+            <nav className="flex-1 space-y-2">
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all duration-200 ${
+                    activeTab === item.id 
+                      ? `${colors.primary} text-white shadow-md font-medium` 
+                      : 'text-stone-600 hover:bg-white/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </div>
+                  {item.isPremium && (
+                    <Icons.Crown size={14} className={activeTab === item.id ? 'text-amber-300' : 'text-amber-500'} />
+                  )}
+                </button>
+              ))}
+            </nav>
+
+            <div className="bg-white/60 p-4 rounded-2xl border border-stone-200 mt-auto">
+              <p className="text-xs font-bold text-stone-800 mb-1">推薦在地資源</p>
+              <p className="text-xs text-stone-500 mb-3">尋找禮儀服務或法律諮詢？</p>
+              <button className="w-full text-xs bg-white border border-[#738276] text-[#738276] py-2.5 rounded-xl hover:bg-[#738276] hover:text-white transition font-medium">
+                查看特約夥伴 (享9折)
+              </button>
             </div>
           </div>
-        );
 
-      case 'family':
-        return (
-          <div className="h-full flex flex-col items-center justify-center text-center p-8">
-            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
-              <Crown size={40} className="text-amber-600" />
+          <div className="flex-1 p-8 overflow-hidden bg-stone-50/50">
+            <div className="max-w-4xl h-full mx-auto">
+              {renderContent()}
             </div>
-            <h2 className="text-2xl font-bold text-stone-800 mb-2">解鎖「家庭共識」功能</h2>
-            <p className="text-stone-500 max-w-md mb-8">
-              升級進階方案，邀請多位家屬加入群組。AI 將協助統整家屬意見、對齊後事流程進度，減少溝通誤會與摩擦。
-            </p>
-            <button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
-              升級進階方案 (NT$499/月)
-            </button>
-            <p className="text-xs text-stone-400 mt-4">包含：多人協作、無限時光膠囊、專屬法律顧問媒合 9 折優惠</p>
           </div>
-        );
-      
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className={`flex h-screen w-full ${colors.bg} font-sans selection:bg-[#738276] selection:text-white`}>
-      {/* 側邊導覽列 */}
-      <div className={`w-64 ${colors.sidebar} p-6 flex flex-col shadow-sm z-10 relative`}>
-        <div className="mb-10 mt-2">
-          <h1 className="text-2xl font-serif font-bold text-stone-800 tracking-wider">好好說再見</h1>
-          <p className="text-xs text-stone-500 mt-1 font-medium">陪伴您整理人生的待辦事項</p>
         </div>
+      );
+    };
 
-        <nav className="flex-1 space-y-2">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all duration-200 ${
-                activeTab === item.id 
-                  ? `${colors.primary} text-white shadow-md font-medium` 
-                  : 'text-stone-600 hover:bg-white/50'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                {item.icon}
-                <span>{item.label}</span>
-              </div>
-              {item.isPremium && (
-                <Crown size={14} className={activeTab === item.id ? 'text-amber-300' : 'text-amber-500'} />
-              )}
-            </button>
-          ))}
-        </nav>
-
-        {/* B端資源導流卡片 (置於側邊欄底部) */}
-        <div className="bg-white/60 p-4 rounded-2xl border border-stone-200 mt-auto">
-          <p className="text-xs font-bold text-stone-800 mb-1">推薦在地資源</p>
-          <p className="text-xs text-stone-500 mb-3">尋找禮儀服務或法律諮詢？</p>
-          <button className="w-full text-xs bg-white border border-[#738276] text-[#738276] py-2.5 rounded-xl hover:bg-[#738276] hover:text-white transition font-medium">
-            查看特約夥伴 (享9折)
+    // 輔助組件：任務分類卡片
+    const TaskCategory = ({ title, icon, bgColor, tasks }) => (
+      <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
+        <div className={`${bgColor} px-6 py-5 flex items-center gap-3 border-b border-stone-50`}>
+          {icon}
+          <h3 className="font-bold text-stone-800 text-lg">{title}</h3>
+        </div>
+        <div className="p-6">
+          <ul className="space-y-4">
+            {tasks.map((task, idx) => (
+              <li key={idx} className={`flex items-start gap-4 p-3 rounded-2xl transition ${task.active ? 'bg-stone-50 border border-stone-200' : ''}`}>
+                <input 
+                  type="checkbox" 
+                  checked={task.done} 
+                  readOnly
+                  className="mt-1 w-5 h-5 accent-[#738276] cursor-pointer rounded-sm"
+                />
+                <div className="flex-1">
+                  <span className={`text-base block ${task.done ? 'text-stone-400 line-through' : 'text-stone-800 font-medium'}`}>
+                    {task.label}
+                  </span>
+                  {task.active && !task.done && (
+                    <p className="text-sm text-stone-500 mt-1">此為您目前的優先任務，您可以點擊下方按鈕讓 AI 協助。</p>
+                  )}
+                  {task.alert && (
+                    <p className="text-xs text-amber-700 mt-2 bg-amber-50 inline-block px-3 py-1.5 rounded-lg border border-amber-100">
+                      {task.alert}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <button className="mt-5 text-sm text-white bg-[#738276] px-5 py-2.5 rounded-full flex items-center gap-2 hover:bg-[#5a665c] transition shadow-sm">
+            <Icons.Sparkles size={16} /> 讓 AI 協助準備此階段 <Icons.ChevronRight size={16} />
           </button>
         </div>
       </div>
+    );
 
-      {/* 主要內容區 */}
-      <div className="flex-1 p-8 overflow-hidden bg-stone-50/50">
-        <div className="max-w-4xl h-full mx-auto">
-          {renderContent()}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// 輔助組件：任務分類卡片
-const TaskCategory = ({ title, icon, bgColor, tasks }) => (
-  <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-    <div className={`${bgColor} px-6 py-5 flex items-center gap-3 border-b border-stone-50`}>
-      {icon}
-      <h3 className="font-bold text-stone-800 text-lg">{title}</h3>
-    </div>
-    <div className="p-6">
-      <ul className="space-y-4">
-        {tasks.map((task, idx) => (
-          <li key={idx} className={`flex items-start gap-4 p-3 rounded-2xl transition ${task.active ? 'bg-stone-50 border border-stone-200' : ''}`}>
-            <input 
-              type="checkbox" 
-              checked={task.done} 
-              readOnly
-              className="mt-1 w-5 h-5 accent-[#738276] cursor-pointer rounded-sm"
-            />
-            <div className="flex-1">
-              <span className={`text-base block ${task.done ? 'text-stone-400 line-through' : 'text-stone-800 font-medium'}`}>
-                {task.label}
-              </span>
-              {task.active && !task.done && (
-                <p className="text-sm text-stone-500 mt-1">此為您目前的優先任務，您可以點擊下方按鈕讓 AI 協助。</p>
-              )}
-              {task.alert && (
-                <p className="text-xs text-amber-700 mt-2 bg-amber-50 inline-block px-3 py-1.5 rounded-lg border border-amber-100">
-                  {task.alert}
-                </p>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-      <button className="mt-5 text-sm text-white bg-[#738276] px-5 py-2.5 rounded-full flex items-center gap-2 hover:bg-[#5a665c] transition shadow-sm">
-        <Sparkles size={16} /> 讓 AI 協助準備此階段 <ChevronRight size={16} />
-      </button>
-    </div>
-  </div>
-);
-
-export default App;
+    // --- 將 React 渲染到 HTML 畫面上 ---
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
