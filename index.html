@@ -165,16 +165,18 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase 環境變數
+        // Firebase 環境變數 (已換成您的專屬設定)
+        const appId = 'class-board-game';
         const firebaseConfig = {
-          apiKey: "AIzaSyAbv7AXj2MviZeMgGtt7A0ITwqBXIucCyY",
-          authDomain: "class-a7cb9.firebaseapp.com",
-          projectId: "class-a7cb9",
-          storageBucket: "class-a7cb9.firebasestorage.app",
-          messagingSenderId: "1096443797025",
-          appId: "1:1096443797025:web:b65995f4fdf5a88b838d60",
-          measurementId: "G-W0GJ7KS2M9"
+            apiKey: "AIzaSyAbv7AXj2MviZeMgGtt7A0ITwqBXIucCyY",
+            authDomain: "class-a7cb9.firebaseapp.com",
+            projectId: "class-a7cb9",
+            storageBucket: "class-a7cb9.firebasestorage.app",
+            messagingSenderId: "1096443797025",
+            appId: "1:1096443797025:web:b65995f4fdf5a88b838d60",
+            measurementId: "G-W0GJ7KS2M9"
         };
+        const initialAuthToken = null;
         
         let db, auth, user, docRef;
         let useFirebase = false;
