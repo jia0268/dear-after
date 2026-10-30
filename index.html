@@ -1,573 +1,624 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dear After | 好好說再見</title>
-  
-  <!-- 載入 Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- 載入 React 與 ReactDOM -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  
-  <!-- 載入 Babel (用來在瀏覽器即時編譯 JSX) -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- Google Fonts: 引入優雅的 Serif 字體呼應 Logo -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    .font-serif-tc {
-      font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
-    }
-    .bg-gradient-warm {
-      background: linear-gradient(135deg, #FFF5E4 0%, #FBE5D6 100%);
-    }
-    .text-primary-dark { color: #8A6D5C; }
-    .bg-primary { background-color: #DDA78A; }
-    .bg-primary-hover { background-color: #C89578; }
-    .border-primary { border-color: #DDA78A; }
-    .text-primary { color: #DDA78A; }
-    
-    /* 自訂滾動條 */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #E5D5C8; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: #DDA78A; }
-  </style>
-</head>
-<body class="bg-[#FCFAF8] text-stone-800">
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-
-    // --- SVG Icons (無外部依賴) ---
-    const Icon = ({ name, size = 24, className = "" }) => {
-      const icons = {
-        home: <g><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></g>,
-        message: <g><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M15.8 9.2a2.5 2.5 0 0 0-3.5 0l-.3.4-.3-.4a2.5 2.5 0 1 0-3.6 3.5l3.9 3.9 3.9-3.9a2.5 2.5 0 0 0 0-3.5Z"/></g>,
-        users: <g><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></g>,
-        gift: <g><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></g>,
-        heart: <g><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></g>,
-        chevronRight: <g><path d="m9 18 6-6-6-6"/></g>,
-        shield: <g><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.5 0 4.5 1 6.5 2a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></g>,
-        mic: <g><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></g>,
-        send: <g><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></g>,
-        checkCircle: <g><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></g>,
-        alertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></g>,
-        sparkles: <g><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 3v4"/><path d="M17 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/></g>
-      };
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          {icons[name]}
-        </svg>
-      );
-    };
-
-    // --- 元件：Landing Page (前導首頁) ---
-    const LandingPage = ({ onEnter }) => {
-      return (
-        <div className="min-h-screen bg-gradient-warm flex flex-col items-center justify-center p-6 relative overflow-hidden">
-          {/* 裝飾性背景圓光 */}
-          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-white opacity-40 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#F8C6B5] opacity-30 rounded-full blur-3xl"></div>
-
-          <div className="z-10 flex flex-col items-center max-w-md text-center">
-            {/* 實際 Logo 視覺 (加入錯誤備援機制與放大 1.2 倍去白邊) */}
-            <div className="w-32 h-32 rounded-[32px] bg-white shadow-xl flex items-center justify-center mb-8 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#FFE8DE] to-[#F1D3C5] opacity-50"></div>
-              <Icon name="heart" size={48} className="text-[#DDA78A] absolute z-0" />
-              <img 
-                src="https://lh3.googleusercontent.com/d/1C_RGufGHkk2IH_UkRHfHvajQKngh9Ej3" 
-                alt="Dear After Logo" 
-                className="w-full h-full object-cover relative z-10 scale-[1.2]"
-                onError={(e) => e.target.style.display = 'none'}
-              />
-            </div>
-
-            <h1 className="text-5xl font-serif-tc font-bold text-primary-dark mb-2 tracking-wide">Dear After</h1>
-            <h2 className="text-2xl font-serif-tc text-stone-600 mb-8 tracking-widest">好好說再見</h2>
-            
-            <p className="text-stone-600 mb-12 leading-relaxed">
-              生命末期家庭的告別歷程<br/>與照顧者支持平台
-            </p>
-
-            <button 
-              onClick={onEnter}
-              className="bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-full font-bold shadow-lg transition-transform transform hover:-translate-y-1 w-full max-w-xs flex justify-center items-center gap-2"
-            >
-              進入專屬陪伴 <Icon name="chevronRight" size={20} />
-            </button>
-            <p className="mt-6 text-sm text-stone-400">DEMO VERSION</p>
-          </div>
-        </div>
-      );
-    };
-
-    // --- 主應用程式 ---
-    const App = () => {
-      const [view, setView] = useState('landing'); // 'landing' | 'app'
-      const [activeTab, setActiveTab] = useState('dashboard');
-      
-      const [chatMessages, setChatMessages] = useState([
-        { role: 'ai', text: '您好，我是 Dear After 陪伴員。今天辛苦了，您感覺好些了嗎？有什麼想抒發的，或是需要我幫忙整理接下來的步驟嗎？' }
-      ]);
-      const [inputText, setInputText] = useState('');
-      const chatEndRef = useRef(null);
-
-      // 自動滾動到最新對話
-      useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, [chatMessages]);
-
-      const handleSendMessage = (textOverride = null) => {
-        const text = textOverride || inputText;
-        if (!text.trim()) return;
-
-        setChatMessages(prev => [...prev, { role: 'user', text }]);
-        setInputText('');
-
-        // 模擬 AI 思考延遲
-        setTimeout(() => {
-          setChatMessages(prev => [...prev, { 
-            role: 'ai', 
-            text: '我明白，這段時間您真的承擔了太多。請記得，感到疲憊或混亂都是非常正常的。我們已經在「家族同步板」幫您把任務分出去了，您今天只需要專注在一件小事就好。' 
-          }]);
-        }, 1200);
-      };
-
-      // 實作安全閘門 Demo 邏輯
-      const triggerSafetyGate = () => {
-        setChatMessages(prev => [...prev, { role: 'user', text: '我真的撐不下去了，好想跟著媽媽一起走...' }]);
-        
-        setTimeout(() => {
-          setChatMessages(prev => [...prev, { 
-            role: 'system_alert', 
-            text: '系統偵測到高壓與風險關鍵字。一般流程已暫停。' 
-          }, {
-            role: 'ai_crisis',
-            text: '林太太，我聽到您說撐不下去了。現在請您先深深吸一口氣。您這段時間為了媽媽已經做得非常好了，但現在我們需要先接住您。\n\n我們已經為您準備了專業的支持資源，您可以隨時點擊下方按鈕與真人社工或心理師通話。您不需要一個人面對這一切。'
-          }]);
-        }, 800);
-      };
-
-      const startChatWithEmotion = (emotion) => {
-        setActiveTab('chat');
-        handleSendMessage(`我現在覺得${emotion}，需要聊聊...`);
-      };
-
-      const menuItems = [
-        { id: 'dashboard', label: '首頁總覽', icon: 'home' },
-        { id: 'sync', label: '家族同步板', icon: 'users' },
-        { id: 'chat', label: '溫柔陪伴', icon: 'message' },
-        { id: 'capsule', label: '時光膠囊', icon: 'gift' },
-      ];
-
-      const renderContent = () => {
-        switch (activeTab) {
-          case 'dashboard':
-            return (
-              <div className="flex flex-col h-full space-y-6 overflow-y-auto pr-2 pb-8 animate-fade-in">
-                {/* 溫暖問候 */}
-                <div className="mt-4">
-                  <h2 className="text-3xl font-serif-tc font-bold text-primary-dark">早安，林太太</h2>
-                  <p className="text-stone-500 mt-2 text-lg">無論今天多麼疲憊，我們都在這裡陪您一步步走。</p>
-                </div>
-
-                {/* 情感打卡 */}
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#F1E9E4] flex items-center justify-between relative overflow-hidden">
-                  <div className="absolute right-0 top-0 opacity-10 text-primary -mr-4 -mt-4">
-                     <Icon name="heart" size={120} />
-                  </div>
-                  <div className="relative z-10">
-                    <h3 className="text-lg font-bold text-stone-800 mb-2 flex items-center gap-2">
-                      現在感覺如何？
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      <button onClick={() => startChatWithEmotion('喘不過氣')} className="px-5 py-2.5 bg-[#FFF0E8] text-[#B06D4D] rounded-full text-sm font-medium hover:bg-[#FBE5D6] transition shadow-sm">
-                        有點喘不過氣
-                      </button>
-                      <button onClick={() => startChatWithEmotion('不知該怎麼辦')} className="px-5 py-2.5 bg-stone-100 text-stone-700 rounded-full text-sm font-medium hover:bg-stone-200 transition shadow-sm">
-                        不知該怎麼辦
-                      </button>
-                      <button onClick={() => startChatWithEmotion('還算平靜')} className="px-5 py-2.5 bg-[#E8F0E8] text-[#5A7A5A] rounded-full text-sm font-medium hover:bg-[#DCE6DC] transition shadow-sm">
-                        目前還算平靜
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 今日三件事 (MVP 核心亮點) */}
-                <div>
-                  <div className="flex justify-between items-end mb-4">
-                    <h3 className="text-xl font-bold text-primary-dark font-serif-tc">今日三件事</h3>
-                    <button onClick={() => setActiveTab('sync')} className="text-sm text-stone-500 hover:text-primary flex items-center">
-                      查看完整進度 <Icon name="chevronRight" size={16} />
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {/* 任務 1 */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-[#DDA78A] flex items-center gap-4 cursor-pointer hover:bg-[#FFFDFC]">
-                      <div className="p-2 bg-[#FFF5E4] rounded-full text-[#DDA78A]"><Icon name="shield" size={20}/></div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-stone-800">與醫生確認目前安寧階段</h4>
-                        <p className="text-sm text-stone-500">不知道怎麼開口？讓 AI 輔助擬定草稿</p>
-                      </div>
-                      <button onClick={() => setActiveTab('chat')} className="px-4 py-2 bg-stone-100 text-stone-600 text-xs font-bold rounded-full hover:bg-stone-200">
-                        AI 協助
-                      </button>
-                    </div>
-
-                    {/* 任務 2 */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-[#A8B5A6] flex items-center gap-4 opacity-75">
-                      <div className="p-2 bg-[#F0F4F0] rounded-full text-[#A8B5A6]"><Icon name="users" size={20}/></div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-stone-800 line-through text-stone-400">準備戶口名簿影本</h4>
-                        <p className="text-sm text-stone-500 flex items-center gap-1">
-                          已指派給 <span className="bg-stone-200 px-2 py-0.5 rounded text-xs">弟弟 (林建宇)</span>
-                        </p>
-                      </div>
-                      <Icon name="checkCircle" size={24} className="text-[#A8B5A6]" />
-                    </div>
-
-                    {/* 任務 3 */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-[#E5C3C3] flex items-center gap-4 cursor-pointer hover:bg-[#FFFDFC]" onClick={() => setActiveTab('capsule')}>
-                      <div className="p-2 bg-[#FCEDED] rounded-full text-[#D59898]"><Icon name="gift" size={20}/></div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-stone-800">錄製一段想對媽媽說的話</h4>
-                        <p className="text-sm text-stone-500">保留珍貴記憶，存入時光膠囊</p>
-                      </div>
-                      <Icon name="chevronRight" size={20} className="text-stone-300" />
-                    </div>
-                  </div>
-                  <p className="text-xs text-center text-stone-400 mt-4">每天只推一小步，降低決策負擔。</p>
-                </div>
-              </div>
-            );
-
-          case 'sync':
-            return (
-              <div className="flex flex-col h-full overflow-y-auto pr-2 pb-8 animate-fade-in">
-                <div className="mb-6 flex justify-between items-end">
-                  <div>
-                    <h2 className="text-2xl font-serif-tc font-bold text-primary-dark">家族同步板</h2>
-                    <p className="text-stone-500 mt-1">掌握全家分工與進度，讓照顧壓力被團隊分擔。</p>
-                  </div>
-                  <button className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 flex items-center gap-2">
-                    <Icon name="users" size={16} /> 邀請家人
-                  </button>
-                </div>
-
-                {/* 階段與類別進度看板 */}
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#F1E9E4] mb-6">
-                  <div className="flex justify-between items-end mb-4">
-                    <div>
-                      <span className="font-bold text-stone-800 text-lg">第一階段：安寧與行政整備</span>
-                      <p className="text-xs text-stone-500 mt-1">目前進展符合預期，繼續保持。</p>
-                    </div>
-                    <span className="text-3xl font-bold text-primary font-serif-tc">35%</span>
-                  </div>
-                  <div className="w-full bg-stone-100 rounded-full h-2.5 mb-6">
-                    <div className="bg-primary h-2.5 rounded-full transition-all duration-1000" style={{ width: '35%' }}></div>
-                  </div>
-                  
-                  {/* 細項進度 */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-[#FCFAF8] p-3 rounded-2xl border border-stone-100">
-                      <div className="flex justify-between text-xs mb-2"><span className="text-stone-600 font-bold">醫療決策</span><span className="text-stone-500">2/5</span></div>
-                      <div className="w-full bg-stone-200 rounded-full h-1.5"><div className="bg-[#DDA78A] h-1.5 rounded-full" style={{width: '40%'}}></div></div>
-                    </div>
-                    <div className="bg-[#FCFAF8] p-3 rounded-2xl border border-stone-100">
-                      <div className="flex justify-between text-xs mb-2"><span className="text-stone-600 font-bold">文件行政</span><span className="text-stone-500">1/4</span></div>
-                      <div className="w-full bg-stone-200 rounded-full h-1.5"><div className="bg-[#A8B5A6] h-1.5 rounded-full" style={{width: '25%'}}></div></div>
-                    </div>
-                    <div className="bg-[#FCFAF8] p-3 rounded-2xl border border-stone-100">
-                      <div className="flex justify-between text-xs mb-2"><span className="text-stone-600 font-bold">告別準備</span><span className="text-stone-500">0/2</span></div>
-                      <div className="w-full bg-stone-200 rounded-full h-1.5"><div className="bg-[#D59898] h-1.5 rounded-full" style={{width: '0%'}}></div></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 家族分工任務列表 */}
-                <h3 className="font-bold text-stone-800 mb-4 font-serif-tc text-lg">成員任務分工</h3>
-                <div className="space-y-5">
-                  {/* 成員 1: 您 */}
-                  <div className="bg-white rounded-2xl border border-[#F1E9E4] overflow-hidden shadow-sm">
-                    <div className="bg-[#FFF5E4] px-5 py-3 flex items-center justify-between border-b border-[#F1E9E4]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#DDA78A] text-white rounded-full flex items-center justify-center font-bold shadow-inner">我</div>
-                        <div>
-                          <span className="font-bold text-stone-800 block">主要照顧者 (您)</span>
-                          <span className="text-xs text-[#B06D4D]">2 項進行中 · 1 項卡關</span>
-                        </div>
-                      </div>
-                      <button className="text-primary hover:text-primary-dark text-sm font-bold bg-white px-3 py-1.5 rounded-lg shadow-sm">+ 新增</button>
-                    </div>
-                    <div className="p-2">
-                      {/* 任務 A */}
-                      <div className="flex items-start gap-3 p-3 hover:bg-stone-50 rounded-xl transition">
-                        <input type="checkbox" className="mt-1.5 w-4 h-4 accent-primary cursor-pointer" />
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <span className="text-stone-800 font-medium text-sm block">與主治醫生確認 DNR (不施行心肺復甦術) 簽署細節</span>
-                            <span className="bg-red-50 text-red-600 text-[10px] px-2 py-0.5 rounded font-bold border border-red-100">需要協助</span>
-                          </div>
-                          <div className="flex gap-2 mt-2">
-                            <span className="text-[10px] bg-[#FFF0E8] text-[#B06D4D] px-2 py-0.5 rounded-full">醫療決策</span>
-                            <span className="text-[10px] text-stone-400 flex items-center gap-1"><Icon name="message" size={12}/> 媽媽似乎還有顧慮</span>
-                          </div>
-                        </div>
-                      </div>
-                      {/* 任務 B */}
-                      <div className="flex items-start gap-3 p-3 hover:bg-stone-50 rounded-xl transition border-t border-stone-50">
-                        <input type="checkbox" className="mt-1.5 w-4 h-4 accent-primary cursor-pointer" />
-                        <div className="flex-1">
-                          <span className="text-stone-800 font-medium text-sm block">與保險業務員聯繫理賠文件準備清單</span>
-                          <div className="flex gap-2 mt-2">
-                            <span className="text-[10px] bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full">文件行政</span>
-                            <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">期限：本週五</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 成員 2: 弟弟 */}
-                  <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-                    <div className="bg-stone-50 px-5 py-3 flex items-center justify-between border-b border-stone-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-stone-400 text-white rounded-full flex items-center justify-center font-bold shadow-inner">弟</div>
-                        <div>
-                          <span className="font-bold text-stone-800 block">弟弟 (林建宇)</span>
-                          <span className="text-xs text-stone-500">1 項已完成 · 1 項進行中</span>
-                        </div>
-                      </div>
-                      <button className="text-stone-500 hover:text-stone-700 text-sm font-bold bg-white border border-stone-200 px-3 py-1.5 rounded-lg shadow-sm">提醒</button>
-                    </div>
-                    <div className="p-2">
-                      <div className="flex items-start gap-3 p-3 opacity-60">
-                        <input type="checkbox" checked readOnly className="mt-1.5 w-4 h-4 accent-stone-400" />
-                        <div className="flex-1">
-                          <span className="text-stone-500 font-medium text-sm line-through block">申請並準備全家戶口名簿影本 3 份</span>
-                          <div className="mt-1.5 text-[10px] bg-stone-200 text-stone-500 px-2 py-0.5 rounded-full inline-block">已於昨天完成</div>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 hover:bg-stone-50 rounded-xl transition border-t border-stone-50">
-                        <input type="checkbox" className="mt-1.5 w-4 h-4 accent-primary cursor-pointer" />
-                        <div className="flex-1">
-                          <span className="text-stone-800 font-medium text-sm block">負責週三下午 14:00 - 18:00 的病房輪班</span>
-                          <div className="flex gap-2 mt-2">
-                            <span className="text-[10px] bg-[#F0F4F0] text-[#5A7A5A] px-2 py-0.5 rounded-full">照顧排班</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* 成員 3: 邀請其他家屬 */}
-                  <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm border-dashed">
-                    <div className="px-5 py-4 flex items-center gap-3 cursor-pointer hover:bg-stone-50 transition">
-                      <div className="w-10 h-10 bg-stone-100 text-stone-400 border border-stone-200 border-dashed rounded-full flex items-center justify-center font-bold text-xl">+</div>
-                      <div>
-                        <span className="font-bold text-stone-600 block">邀請其他家屬</span>
-                        <span className="text-xs text-stone-400">目前還有 3 項未分配的待辦事項</span>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            );
-
-          case 'chat':
-            return (
-              <div className="flex flex-col h-full animate-fade-in">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-serif-tc font-bold text-primary-dark">溫柔陪伴</h2>
-                    <p className="text-stone-500 text-sm mt-1">AI 隨時傾聽，並為您整理思緒與步驟。</p>
-                  </div>
-                  {/* Pitch 專用：安全閘門觸發鈕 */}
-                  <button onClick={triggerSafetyGate} className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-full hover:bg-red-100 flex items-center gap-1">
-                    <Icon name="alertTriangle" size={14}/> 測試安全閘門
-                  </button>
-                </div>
-                
-                {/* 聊天區塊 */}
-                <div className="flex-1 bg-white rounded-3xl shadow-inner border border-[#F1E9E4] p-5 flex flex-col mb-4 overflow-y-auto">
-                  {chatMessages.map((msg, idx) => (
-                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-                      {msg.role.startsWith('ai') && (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0 ${msg.role === 'ai_crisis' ? 'bg-red-100 text-red-600' : 'bg-[#FFF5E4] text-[#DDA78A]'}`}>
-                          <Icon name={msg.role === 'ai_crisis' ? 'heart' : 'sparkles'} size={16} />
-                        </div>
-                      )}
-                      
-                      {msg.role === 'system_alert' ? (
-                        <div className="w-full my-2 flex items-center justify-center">
-                          <span className="bg-red-50 text-red-500 text-xs px-3 py-1 rounded-full flex items-center gap-1 font-bold">
-                            <Icon name="alertTriangle" size={12}/> {msg.text}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className={`max-w-[75%] p-4 rounded-2xl text-sm leading-relaxed ${
-                          msg.role === 'user' 
-                            ? `bg-primary text-white rounded-tr-none shadow-sm` 
-                            : msg.role === 'ai_crisis'
-                              ? 'bg-red-50 border border-red-100 text-red-900 rounded-tl-none font-medium'
-                              : 'bg-[#FCFAF8] border border-[#F1E9E4] text-stone-700 rounded-tl-none'
-                        }`}>
-                          {msg.text.split('\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>)}
-                          
-                          {msg.role === 'ai_crisis' && (
-                            <button className="mt-3 w-full bg-red-600 text-white py-2 rounded-lg font-bold shadow hover:bg-red-700">
-                              撥打 1925 安心專線
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* 輸入區塊 */}
-                <div className="flex gap-2 items-center bg-white p-2 rounded-full shadow-sm border border-[#F1E9E4]">
-                  <button className="p-2.5 text-stone-400 hover:text-primary transition">
-                    <Icon name="mic" size={20} />
-                  </button>
-                  <input 
-                    type="text" 
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="輸入想說的話，或是詢問接下來的流程..." 
-                    className="flex-1 bg-transparent outline-none text-stone-700 text-sm"
-                  />
-                  <button onClick={() => handleSendMessage()} className="p-2.5 bg-primary text-white rounded-full hover:bg-primary-hover transition">
-                    <Icon name="send" size={20} />
-                  </button>
-                </div>
-              </div>
-            );
-
-          case 'capsule':
-            return (
-              <div className="flex flex-col h-full animate-fade-in pr-2">
-                <div className="mb-6 flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-serif-tc font-bold text-primary-dark">記憶保存</h2>
-                    <p className="text-stone-500 mt-1">把愛與回憶留下，預約在未來的時刻解開。</p>
-                  </div>
-                  <button className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 flex items-center gap-2">
-                    <Icon name="gift" size={16} /> 新建膠囊
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* 已封存膠囊 */}
-                  <div className="bg-white p-5 rounded-3xl shadow-sm border border-[#F1E9E4] flex flex-col justify-between h-48 relative overflow-hidden">
-                    <div className="absolute right-[-20px] top-[-20px] opacity-5">
-                      <Icon name="heart" size={100} />
-                    </div>
-                    <div className="relative z-10">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-lg text-stone-800 font-serif-tc">給小寶的成年禮</h3>
-                        <span className="bg-[#FFF5E4] text-[#B06D4D] text-xs px-2 py-1 rounded-md font-bold">已上鎖</span>
-                      </div>
-                      <p className="text-sm text-stone-500 line-clamp-2">「當你看到這支影片，代表你已經 18 歲了，媽媽想對你說...」</p>
-                    </div>
-                    <div className="text-xs text-[#A8B5A6] font-bold mt-auto relative z-10 bg-[#F0F4F0] self-start px-2 py-1 rounded">
-                      解鎖時間：2032 年 6 月
-                    </div>
-                  </div>
-
-                  {/* 新增膠囊區塊 */}
-                  <div className="bg-[#FCFAF8] p-5 rounded-3xl border-2 border-dashed border-[#E5D5C8] flex flex-col justify-center items-center h-48 text-[#DDA78A] cursor-pointer hover:bg-[#FFF5E4] transition">
-                    <Icon name="mic" size={32} className="mb-2" />
-                    <p className="font-bold font-serif-tc">錄製給配偶的話</p>
-                    <p className="text-xs text-stone-400 mt-1">系統將引導您完成</p>
-                  </div>
-                </div>
-              </div>
-            );
-
-          default: return null;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動式教學與課程設計 - 報告安排桌遊版</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            /* 實木桌面背景 - 更新為更有質感的淺色實木紋 */
+            background: #d4c4b7 url('https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=2000&auto=format&fit=crop') center/cover fixed;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-      };
 
-      if (view === 'landing') {
-        return <LandingPage onEnter={() => setView('app')} />;
-      }
+        /* 桌遊地圖紙質感 */
+        .board-paper {
+            background: #f4efe6;
+            background-image: 
+                radial-gradient(#e2d7c5 1px, transparent 0),
+                linear-gradient(to right, rgba(0,0,0,0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.02) 1px, transparent 1px);
+            background-size: 20px 20px, 15px 15px, 15px 15px;
+            box-shadow: 
+                0 -10px 20px rgba(0, 0, 0, 0.3),
+                inset 0 0 60px rgba(180, 150, 110, 0.1);
+        }
 
-      return (
-        <div className="flex h-screen w-full bg-[#FCFAF8] font-sans selection:bg-[#DDA78A] selection:text-white">
-          {/* 左側導覽列 */}
-          <div className="w-64 bg-white border-r border-[#F1E9E4] p-6 flex flex-col z-10 shadow-sm">
-            <div className="mb-10 mt-2 flex items-center gap-3 cursor-pointer" onClick={() => setView('landing')}>
-              <div className="w-10 h-10 rounded-xl shadow-inner overflow-hidden flex-shrink-0 relative flex items-center justify-center bg-gradient-warm text-primary">
-                <Icon name="heart" size={20} className="absolute z-0" />
-                <img 
-                  src="https://lh3.googleusercontent.com/d/1C_RGufGHkk2IH_UkRHfHvajQKngh9Ej3" 
-                  alt="Logo" 
-                  className="w-full h-full object-cover relative z-10 scale-[1.2]" 
-                  onError={(e) => e.target.style.display = 'none'}
-                />
-              </div>
-              <div>
-                <h1 className="text-xl font-serif-tc font-bold text-primary-dark">Dear After</h1>
-                <p className="text-[10px] text-stone-400 font-bold tracking-widest">好好說再見</p>
-              </div>
-            </div>
+        /* 迷你卡牌（適應手機） */
+        .mini-card {
+            background-color: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.15s ease;
+            width: calc(33.33% - 8px); /* 手機端一排約3-4張 */
+            max-width: 90px;
+            cursor: pointer;
+        }
+        @media (min-width: 640px) {
+            .mini-card { max-width: 100px; }
+        }
 
-            <nav className="flex-1 space-y-2">
-              {menuItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 ${
-                    activeTab === item.id 
-                      ? 'bg-primary text-white shadow-md font-bold' 
-                      : 'text-stone-500 hover:bg-[#FFF5E4] hover:text-primary-dark font-medium'
-                  }`}
-                >
-                  <Icon name={item.icon} size={20} />
-                  <span>{item.label}</span>
+        .mini-card:active {
+            transform: scale(0.95);
+        }
+
+        /* 選中狀態 */
+        .mini-card.selected {
+            border-color: #d97706;
+            box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.3), 0 6px 12px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            z-index: 10;
+        }
+
+        /* 接龍堆疊卡片 */
+        .stacked-card {
+            width: 100%;
+            margin-top: -32px; /* 調整堆疊間距，讓格子不會超出高度 */
+            box-shadow: 0 -3px 6px rgba(0, 0, 0, 0.1);
+            cursor: default;
+        }
+        .stacked-card:first-child {
+            margin-top: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 隱藏捲軸保持畫面乾淨 */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center p-2 sm:p-4">
+
+    <!-- 主要互動區 (上下分佈，適應手機) -->
+    <main class="w-full max-w-4xl flex-1 flex flex-col gap-2 overflow-hidden">
+        
+        <!-- 上半部：手牌區 (調整高度與內距，讓下排卡片露出半截提示可滑動) -->
+        <section class="shrink-0 bg-[#f4efe6]/95 backdrop-blur-md rounded-2xl px-2 pt-1.5 pb-0 shadow-lg border-2 border-[#e8dec8] flex flex-col h-[28%] min-h-[155px] max-h-[32%]">
+            <div class="flex justify-end items-center mb-1 px-1 border-b border-[#e8dec8] pb-1">
+                <button id="edit-mode-btn" onclick="handleEditModeClick()" class="text-[10px] text-stone-500 bg-stone-200 px-2 py-1 rounded-full font-bold shadow-sm border border-stone-300 hover:bg-stone-300 transition-colors">
+                    點擊名牌 ➔ 選擇時程
                 </button>
-              ))}
-            </nav>
-
-            {/* 底部升級提示 / B端導流 */}
-            <div className="bg-[#FCFAF8] p-4 rounded-2xl border border-[#F1E9E4] mt-auto">
-              <p className="text-xs font-bold text-stone-700 mb-1">專家資源媒合</p>
-              <p className="text-xs text-stone-400 mb-3">需要特約禮儀或法務顧問？</p>
-              <button className="w-full text-xs bg-white border border-[#DDA78A] text-[#DDA78A] py-2 rounded-xl hover:bg-[#DDA78A] hover:text-white transition font-bold">
-                查看平台資源
-              </button>
             </div>
-          </div>
 
-          {/* 右側內容區 */}
-          <div className="flex-1 p-8 overflow-hidden bg-[#FCFAF8]">
-            <div className="max-w-4xl h-full mx-auto">
-              {renderContent()}
+            <!-- 卡牌容器 (取消頂部 padding，增加底部 padding 空間) -->
+            <div id="student-pool" class="flex-1 overflow-y-auto hide-scrollbar flex flex-wrap content-start gap-1 sm:gap-2 justify-center pt-0 pb-6 relative">
+                <!-- 動態載入學生卡牌 -->
             </div>
-          </div>
+        </section>
+
+        <!-- 下半部：桌遊圖板 -->
+        <section class="flex-1 board-paper rounded-t-3xl p-2 md:p-4 flex flex-col overflow-hidden border-t-4 border-l-4 border-r-4 border-[#e8dec8]">
+            <!-- 表格標頭 -->
+            <div class="grid grid-cols-3 gap-2 mb-2 sticky top-0 z-20 bg-[#f4efe6]/90 backdrop-blur pb-1">
+                <div class="text-center font-black text-[#42523b] text-xl md:text-2xl tracking-wider">11/20</div>
+                <div class="text-center font-black text-[#42523b] text-xl md:text-2xl tracking-wider">11/27</div>
+                <div class="text-center font-black text-[#42523b] text-xl md:text-2xl tracking-wider">12/4</div>
+            </div>
+
+            <!-- 3 x 4 網格區域 -->
+            <div class="grid grid-cols-3 grid-rows-4 gap-1.5 md:gap-3 flex-1 overflow-hidden" id="board-grid">
+                <!-- 動態渲染 12 個時段格 -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 桌遊風格彈窗 (Modal) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#fcf8f2] border-4 border-[#2c1d11] rounded-2xl max-w-sm w-full p-6 shadow-2xl text-stone-800 transform transition-all scale-95 opacity-0 duration-150" id="modal-content">
+            <h3 class="text-lg font-black text-[#2c1d11] mb-2 flex items-center gap-2">
+                📌 確認放入此時段？
+            </h3>
+            <p id="modal-desc" class="text-sm text-stone-600 mb-5 leading-relaxed">
+                確定將同學安排至 <span id="modal-target-text" class="font-bold text-amber-800"></span>？<br>
+                <span class="text-xs text-rose-600 font-bold">（確認後時段將鎖定，無法更改）</span>
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeModal(false)" class="flex-1 py-2.5 px-3 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded-xl text-xs transition">
+                    我再想想
+                </button>
+                <button onclick="closeModal(true)" class="flex-1 py-2.5 px-3 bg-[#2c1d11] hover:bg-stone-800 text-amber-100 font-black rounded-xl text-xs shadow transition">
+                    確認鎖定
+                </button>
+            </div>
         </div>
-      );
-    };
+    </div>
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+    <!-- 密碼輸入彈窗 (編輯模式) -->
+    <div id="password-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#fcf8f2] border-4 border-[#2c1d11] rounded-2xl max-w-sm w-full p-6 shadow-2xl text-stone-800 transform transition-all scale-95 opacity-0 duration-150" id="pwd-modal-content">
+            <h3 class="text-lg font-black text-[#2c1d11] mb-4 flex items-center gap-2 justify-center">
+                🔒 解鎖編輯模式
+            </h3>
+            <input type="password" id="admin-pwd-input" class="w-full border-2 border-stone-300 rounded-xl p-3 mb-5 text-center tracking-[0.5em] font-bold text-lg focus:border-[#d97706] outline-none" placeholder="輸入密碼">
+            <div class="flex gap-3">
+                <button onclick="closePasswordModal(false)" class="flex-1 py-2.5 px-3 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded-xl text-xs transition">
+                    取消
+                </button>
+                <button onclick="closePasswordModal(true)" class="flex-1 py-2.5 px-3 bg-[#2c1d11] hover:bg-stone-800 text-amber-100 font-black rounded-xl text-xs shadow transition">
+                    解鎖
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 訊息提示 -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-[#2c1d11] text-amber-100 border border-amber-700 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <span id="toast-icon">✨</span>
+        <span id="toast-msg">操作成功</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase 環境變數
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let db, auth, user, docRef;
+        let useFirebase = false;
+
+        // 預設 Emoji 圖示庫與色系組合
+        const emojiPalette = [
+            { emoji: '🧩', color: '#15803d', bg: '#f0fdf4' }, // 綠
+            { emoji: '🎲', color: '#b45309', bg: '#fffbeb' }, // 棕/黃
+            { emoji: '🎨', color: '#0369a1', bg: '#f0f9ff' }, // 藍
+            { emoji: '🎯', color: '#b91c1c', bg: '#fef2f2' }, // 紅
+            { emoji: '🔮', color: '#6b21a8', bg: '#faf5ff' }, // 紫
+            { emoji: '🎪', color: '#c2410c', bg: '#fff7ed' }  // 橘
+        ];
+
+        // 25 位學生名單
+        const rawStudents = [
+            { id: "s1", dept: "教科系", name: "葉凡睿" },
+            { id: "s2", dept: "教科系", name: "呂紫柔" },
+            { id: "s3", dept: "社會所", name: "李玥希" },
+            { id: "s4", dept: "社會所", name: "洪芝盈" },
+            { id: "s5", dept: "社會所", name: "張絡晴" },
+            { id: "s6", dept: "教科系", name: "賴巧儒" },
+            { id: "s7", dept: "學科所", name: "李芷儀" },
+            { id: "s8", dept: "學科所", name: "蘇純立" },
+            { id: "s9", dept: "學科所", name: "黃韜尹" },
+            { id: "s10", dept: "學科所", name: "黃子珈" },
+            { id: "s11", dept: "學科所", name: "馬萁蔚" },
+            { id: "s12", dept: "學科所", name: "張捷婷" },
+            { id: "s13", dept: "學科所", name: "莊凱筑" },
+            { id: "s14", dept: "學科所", name: "游博詮" },
+            { id: "s15", dept: "學科所", name: "洪芯雅" },
+            { id: "s16", dept: "學科所", name: "林昱彤" },
+            { id: "s17", dept: "學科所", name: "林大峰" },
+            { id: "s18", dept: "學科所", name: "黃禹凡" },
+            { id: "s19", dept: "學科所", name: "侯采辰" },
+            { id: "s20", dept: "學科所", name: "嚴俐心" },
+            { id: "s21", dept: "學科所", name: "李承熹" },
+            { id: "s22", dept: "學科所", name: "李崇甫" },
+            { id: "s23", dept: "學科所", name: "洪子茹" },
+            { id: "s24", dept: "學科所", name: "吳齊恩" },
+            { id: "s25", dept: "學科所", name: "孔育婕" }
+        ];
+
+        // 為學生隨機配對 Emoji 與色系
+        const initialStudents = rawStudents.map((st, idx) => {
+            const style = emojiPalette[idx % emojiPalette.length];
+            return { ...st, ...style };
+        });
+
+        // 狀態資料
+        let state = {
+            students: [...initialStudents],
+            grid: {}
+        };
+        
+        let selectedCardId = null; // 用於手機端點擊選牌
+        let isEditMode = false;    // 編輯模式彩蛋
+
+        const weeks = [
+            { key: 'w11', label: '11/20' },
+            { key: 'w12', label: '11/27' },
+            { key: 'w13', label: '12/4' }
+        ];
+
+        // 初始化 12 格
+        function initGridIfEmpty() {
+            weeks.forEach(w => {
+                for (let r = 1; r <= 4; r++) {
+                    if (!state.grid[`${w.key}_${r}`]) {
+                        state.grid[`${w.key}_${r}`] = [];
+                    }
+                }
+            });
+        }
+
+        async function initApp() {
+            initGridIfEmpty();
+            
+            // 雲端連線設定
+            if (firebaseConfig) {
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    
+                    user = auth.currentUser;
+                    if (user) {
+                        useFirebase = true;
+                        // 雲端文件路徑 - 依賴標準公開目錄存放共用圖板
+                        docRef = doc(db, 'artifacts', appId, 'public', 'data', 'boardState', 'main');
+                        
+                        // 即時同步監聽 (別人拉了卡片，這裡會自動收到更新)
+                        onSnapshot(docRef, (docSnap) => {
+                            if (docSnap.exists()) {
+                                const data = docSnap.data();
+                                state.students = data.students || [];
+                                state.grid = data.grid || {};
+                                initGridIfEmpty();
+                                renderStudentsPool();
+                                renderBoard();
+                            } else {
+                                // 第一次使用自動初始化雲端文件
+                                state.students = [...initialStudents];
+                                initGridIfEmpty();
+                                saveState(); 
+                            }
+                        }, (error) => {
+                            console.error("Firebase sync error:", error);
+                            showToast('雲端同步中斷，轉為單機模式', '⚠️');
+                            fallbackToLocal();
+                        });
+                        
+                        showToast('🌐 已連線至雲端同步', '✨');
+                    }
+                } catch (e) {
+                    console.error("Firebase init failed", e);
+                    fallbackToLocal();
+                }
+            } else {
+                fallbackToLocal();
+            }
+
+            // 點擊空白處取消選取
+            document.body.addEventListener('click', (e) => {
+                if (selectedCardId && !e.target.closest('.mini-card') && !e.target.closest('.slot-box')) {
+                    selectedCardId = null;
+                    renderStudentsPool();
+                }
+            });
+        }
+
+        function fallbackToLocal() {
+            useFirebase = false;
+            const saved = localStorage.getItem('tabletop_report_schedule_v3');
+            if (saved) {
+                try { state = JSON.parse(saved); } catch(e) {}
+            }
+            initGridIfEmpty();
+            renderStudentsPool();
+            renderBoard();
+        }
+
+        async function saveState() {
+            if (useFirebase && user && docRef) {
+                try {
+                    // 推送到雲端同步
+                    await setDoc(docRef, state);
+                } catch (e) {
+                    console.error("Firebase save failed", e);
+                    showToast('雲端儲存失敗', '❌');
+                }
+            } else {
+                // 退回使用本地儲存
+                localStorage.setItem('tabletop_report_schedule_v3', JSON.stringify(state));
+            }
+        }
+
+        // 渲染上方手牌區
+        function renderStudentsPool() {
+            const poolEl = document.getElementById('student-pool');
+            poolEl.innerHTML = '';
+
+            if (state.students.length === 0) {
+                poolEl.innerHTML = `
+                    <div class="w-full h-full flex flex-col items-center justify-center text-stone-400/60">
+                        <div class="text-3xl mb-1">🎉</div>
+                        <p class="text-xs font-bold">全數安排完畢</p>
+                    </div>
+                `;
+                return;
+            }
+
+            state.students.forEach(student => {
+                const isSelected = student.id === selectedCardId;
+                const card = createCardElement(student, false, isSelected);
+                
+                // 點擊選取邏輯
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (selectedCardId === student.id) {
+                        selectedCardId = null; // 取消選取
+                    } else {
+                        selectedCardId = student.id; // 選取
+                    }
+                    renderStudentsPool();
+                });
+
+                poolEl.appendChild(card);
+            });
+        }
+
+        // 創建迷你卡牌 DOM
+        function createCardElement(student, isStacked = false, isSelected = false) {
+            const card = document.createElement('div');
+            
+            let classes = 'mini-card p-1.5 flex flex-col justify-between bg-white relative';
+            if (isStacked) classes += ' stacked-card';
+            if (isSelected) classes += ' selected';
+            
+            card.className = classes;
+            if(!isStacked) card.draggable = true;
+            card.dataset.id = student.id;
+
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] leading-none">${student.emoji}</span>
+                    <span class="text-[9px] font-bold tracking-tighter" style="color: ${student.color}">${student.dept}</span>
+                </div>
+                <div class="text-[11px] font-black text-center" style="color: ${student.color}">
+                    ${student.name}
+                </div>
+            `;
+
+            if (!isStacked) {
+                card.addEventListener('dragstart', (e) => {
+                    selectedCardId = student.id;
+                    renderStudentsPool();
+                    e.dataTransfer.setData('text/plain', student.id);
+                    setTimeout(() => card.classList.add('opacity-50'), 0);
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('opacity-50');
+                });
+            }
+
+            return card;
+        }
+
+        // 渲染下方桌遊棋盤表格
+        function renderBoard() {
+            const gridContainer = document.getElementById('board-grid');
+            gridContainer.innerHTML = '';
+
+            for (let row = 1; row <= 4; row++) {
+                weeks.forEach(w => {
+                    const slotKey = `${w.key}_${row}`;
+                    const slotCards = state.grid[slotKey] || [];
+                    const isFull = slotCards.length >= 3;
+
+                    const slotBox = document.createElement('div');
+                    slotBox.className = `slot-box rounded-xl md:rounded-2xl p-1 md:p-2 h-full w-full transition-all flex flex-col items-center justify-start relative overflow-hidden ${isFull ? 'bg-stone-300/40 border border-stone-300' : 'bg-[#cbd5e1]/60 hover:bg-[#cbd5e1] border-2 border-transparent'}`;
+                    if (selectedCardId && !isFull) {
+                        slotBox.classList.add('animate-pulse', 'border-[#d97706]/40', 'bg-[#fef3c7]/60');
+                    }
+
+                    if (slotCards.length > 0) {
+                        const stackWrapper = document.createElement('div');
+                        stackWrapper.className = 'w-full flex flex-col items-center mt-1';
+
+                        slotCards.forEach((item, index) => {
+                            const cardEl = createCardElement(item.student, true);
+                            
+                            if (isEditMode) {
+                                cardEl.style.cursor = 'pointer';
+                                cardEl.classList.add('hover:border-rose-400', 'hover:opacity-80');
+                                cardEl.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    state.grid[slotKey].splice(index, 1);
+                                    state.students.push(item.student);
+                                    selectedCardId = null;
+                                    saveState();
+                                    renderStudentsPool();
+                                    renderBoard();
+                                    showToast(`已將 ${item.student.name} 移回名牌區`, '↩️');
+                                });
+                            }
+                            
+                            stackWrapper.appendChild(cardEl);
+                        });
+                        slotBox.appendChild(stackWrapper);
+                    } else {
+                        slotBox.innerHTML = `
+                            <div class="absolute inset-0 flex items-center justify-center text-[#64748b] font-black text-lg md:text-2xl pointer-events-none opacity-50">
+                                ${row}
+                            </div>
+                        `;
+                    }
+
+                    const handlePlace = () => {
+                        if (isFull) {
+                            showToast('此時段已滿（上限3人）', '⚠️');
+                            return;
+                        }
+                        if (!selectedCardId) return;
+
+                        const studentIndex = state.students.findIndex(s => s.id === selectedCardId);
+                        if (studentIndex === -1) return;
+
+                        const student = state.students[studentIndex];
+                        pendingDropData = {
+                            student,
+                            studentIndex,
+                            slotKey,
+                            targetText: `${w.label} 第 ${row} 組`
+                        };
+                        
+                        if (isEditMode) {
+                            executeDrop(pendingDropData);
+                        } else {
+                            openModal(pendingDropData.targetText);
+                        }
+                    };
+
+                    slotBox.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (selectedCardId) {
+                            handlePlace();
+                        }
+                    });
+
+                    slotBox.addEventListener('dragover', (e) => {
+                        if (!isFull) {
+                            e.preventDefault();
+                            slotBox.classList.add('bg-[#fcd34d]/50', 'border-[#d97706]');
+                        }
+                    });
+
+                    slotBox.addEventListener('dragleave', () => {
+                        slotBox.classList.remove('bg-[#fcd34d]/50', 'border-[#d97706]');
+                    });
+
+                    slotBox.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        slotBox.classList.remove('bg-[#fcd34d]/50', 'border-[#d97706]');
+                        handlePlace();
+                    });
+
+                    gridContainer.appendChild(slotBox);
+                });
+            }
+        }
+
+        let pendingDropData = null;
+
+        // 將函數掛載到 window，讓 HTML 的 onclick 可以呼叫
+        window.handleEditModeClick = function() {
+            if (isEditMode) {
+                isEditMode = false;
+                updateEditModeUI();
+                showToast('已鎖定介面', '🔒');
+                renderBoard();
+            } else {
+                document.getElementById('admin-pwd-input').value = '';
+                const modal = document.getElementById('password-modal');
+                const content = document.getElementById('pwd-modal-content');
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                    document.getElementById('admin-pwd-input').focus();
+                }, 10);
+            }
+        };
+
+        window.closePasswordModal = function(isSubmit) {
+            const modal = document.getElementById('password-modal');
+            const content = document.getElementById('pwd-modal-content');
+            
+            if (isSubmit) {
+                const pwd = document.getElementById('admin-pwd-input').value;
+                if (pwd === '0520') {
+                    isEditMode = true;
+                    updateEditModeUI();
+                    showToast('已進入解鎖編輯模式', '🔓');
+                    renderBoard(); 
+                } else {
+                    showToast('密碼錯誤', '❌');
+                }
+            }
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        };
+
+        function updateEditModeUI() {
+            const btn = document.getElementById('edit-mode-btn');
+            if (isEditMode) {
+                btn.innerText = '🔓 編輯模式 (點擊鎖定)';
+                btn.className = 'text-[10px] text-rose-700 bg-rose-100 px-2 py-1 rounded-full font-bold shadow-sm border border-rose-300 hover:bg-rose-200 transition-colors';
+            } else {
+                btn.innerText = '點擊名牌 ➔ 選擇時程';
+                btn.className = 'text-[10px] text-stone-500 bg-stone-200 px-2 py-1 rounded-full font-bold shadow-sm border border-stone-300 hover:bg-stone-300 transition-colors';
+            }
+        }
+
+        window.openModal = function(targetText) {
+            document.getElementById('modal-target-text').innerText = targetText;
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+
+        window.closeModal = function(isConfirmed) {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (isConfirmed && pendingDropData) {
+                    executeDrop(pendingDropData);
+                }
+                pendingDropData = null;
+            }, 150);
+        };
+
+        function executeDrop(data) {
+            state.students.splice(data.studentIndex, 1);
+            state.grid[data.slotKey].push({
+                student: data.student,
+                locked: true
+            });
+
+            selectedCardId = null;
+            saveState(); // 觸發雲端儲存，其他人畫面會同步更新
+            
+            // 由於 onSnapshot 會觸發畫面更新，這裡提早 render 讓本機反應更迅速
+            renderStudentsPool();
+            renderBoard();
+            showToast(`已鎖定於 ${data.targetText}！`, '🔒');
+        }
+
+        function showToast(msg, icon = '✨') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            document.getElementById('toast-icon').innerText = icon;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        window.onload = initApp;
+    </script>
 </body>
 </html>
