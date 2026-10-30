@@ -166,9 +166,15 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase 環境變數
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const firebaseConfig = {
+          apiKey: "AIzaSyAbv7AXj2MviZeMgGtt7A0ITwqBXIucCyY",
+          authDomain: "class-a7cb9.firebaseapp.com",
+          projectId: "class-a7cb9",
+          storageBucket: "class-a7cb9.firebasestorage.app",
+          messagingSenderId: "1096443797025",
+          appId: "1:1096443797025:web:b65995f4fdf5a88b838d60",
+          measurementId: "G-W0GJ7KS2M9"
+        };
         
         let db, auth, user, docRef;
         let useFirebase = false;
