@@ -61,13 +61,25 @@
         /* 接龍堆疊卡片 */
         .stacked-card {
             width: 100%;
-            margin-top: -32px; /* 調整堆疊間距，讓格子不會超出高度 */
+            margin-top: -28px; /* 調整堆疊間距 */
             box-shadow: 0 -3px 6px rgba(0, 0, 0, 0.1);
-            cursor: default;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), z-index 0.15s ease, box-shadow 0.2s ease;
+            position: relative;
+            z-index: 1;
         }
         .stacked-card:first-child {
             margin-top: 0;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 按住 / 長按 / 懸停 時將卡片浮起突出顯示 */
+        .stacked-card:hover,
+        .stacked-card:active,
+        .stacked-card.peek-active {
+            z-index: 40 !important;
+            transform: scale(1.12) translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
         }
 
         /* 隱藏捲軸保持畫面乾淨 */
@@ -88,7 +100,7 @@
         <!-- 上半部：手牌區 (調整高度與內距，讓下排卡片露出半截提示可滑動) -->
         <section class="shrink-0 bg-[#f4efe6]/95 backdrop-blur-md rounded-2xl px-2 pt-1.5 pb-0 shadow-lg border-2 border-[#e8dec8] flex flex-col h-[28%] min-h-[155px] max-h-[32%]">
             <div class="flex justify-between items-center mb-1 px-1 border-b border-[#e8dec8] pb-1">
-                <span class="text-[10px] font-bold text-stone-500 tracking-wider">⏱️ 1-3人一組，報告最多20分鐘</span>
+                <span class="text-[10px] font-bold text-stone-500 tracking-wider">⏱️ 1-3人一組，報告20分鐘</span>
                 <button id="edit-mode-btn" onclick="handleEditModeClick()" class="text-[10px] text-stone-500 bg-stone-200 px-2 py-1 rounded-full font-bold shadow-sm border border-stone-300 hover:bg-stone-300 transition-colors">
                     點擊名牌 ➔ 選擇時程
                 </button>
@@ -388,14 +400,27 @@
             card.dataset.id = student.id;
 
             card.innerHTML = `
-                <div class="flex justify-between items-center mb-1">
+                <div class="flex justify-between items-center mb-1 pointer-events-none">
                     <span class="text-[10px] leading-none">${student.emoji}</span>
                     <span class="text-[9px] font-bold tracking-tighter" style="color: ${student.color}">${student.dept}</span>
                 </div>
-                <div class="text-[11px] font-black text-center" style="color: ${student.color}">
+                <div class="text-[11px] font-black text-center pointer-events-none" style="color: ${student.color}">
                     ${student.name}
                 </div>
             `;
+
+            if (isStacked) {
+                // 按住 / 長按 / 點擊 時浮起卡片顯示完整內容
+                const startPeek = () => card.classList.add('peek-active');
+                const endPeek = () => card.classList.remove('peek-active');
+
+                card.addEventListener('touchstart', startPeek, { passive: true });
+                card.addEventListener('touchend', endPeek, { passive: true });
+                card.addEventListener('touchcancel', endPeek, { passive: true });
+                card.addEventListener('mousedown', startPeek);
+                card.addEventListener('mouseup', endPeek);
+                card.addEventListener('mouseleave', endPeek);
+            }
 
             if (!isStacked) {
                 card.addEventListener('dragstart', (e) => {
@@ -425,7 +450,7 @@
                     const isFull = slotCards.length >= 3;
 
                     const slotBox = document.createElement('div');
-                    slotBox.className = `slot-box rounded-xl md:rounded-2xl p-1 md:p-2 h-full w-full transition-all flex flex-col items-center justify-start relative overflow-hidden ${isFull ? 'bg-stone-300/40 border border-stone-300' : 'bg-[#cbd5e1]/60 hover:bg-[#cbd5e1] border-2 border-transparent'}`;
+                    slotBox.className = `slot-box rounded-xl md:rounded-2xl p-1 md:p-2 h-full w-full transition-all flex flex-col items-center justify-start relative overflow-visible ${isFull ? 'bg-stone-300/40 border border-stone-300' : 'bg-[#cbd5e1]/60 hover:bg-[#cbd5e1] border-2 border-transparent'}`;
                     if (selectedCardId && !isFull) {
                         slotBox.classList.add('animate-pulse', 'border-[#d97706]/40', 'bg-[#fef3c7]/60');
                     }
